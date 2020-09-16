@@ -1,7 +1,7 @@
-import java.net.http.HttpResponse.BodyHandler
+package com.example.removed
 
-import akka.actor.typed.{Behavior, PostStop, Signal}
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
+import akka.actor.typed.{Behavior, PostStop, Signal}
 
 object IotSupervisor {
   def apply(): Behavior[Nothing] =

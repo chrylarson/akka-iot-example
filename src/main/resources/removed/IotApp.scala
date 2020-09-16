@@ -1,15 +1,15 @@
-import DeviceManager.{DeviceRegistered, RequestTrackDevice}
-import akka.actor.typed.{ActorRef, ActorSystem}
-import akka.stream.scaladsl.Source
+package com.example.removed
+
+import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.Behaviors
-import akka.stream.scaladsl._
-import akka.util.ByteString
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity}
-import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.Directives.{complete, concat, get, path, pathPrefix}
+import akka.stream.scaladsl.Source
+import akka.util.ByteString
 
-import scala.util.Random
 import scala.io.StdIn
+import scala.util.Random
 
 object IotApp {
   def main(args: Array[String]): Unit = {
@@ -32,6 +32,17 @@ object IotApp {
 
     val route =
       concat(
+        path("ping") {
+          get {
+            complete(
+              HttpEntity(
+                ContentTypes.`text/plain(UTF-8)`,
+                // transform each number to a chunk of bytes
+                "pong"
+              )
+            )
+          }
+        },
         path("random") {
           get {
             complete(
@@ -43,16 +54,31 @@ object IotApp {
             )
           }
         },
-        get {
-          pathPrefix("group" / LongNumber/ "device" / LongNumber) { (groupId, deviceId) =>
-            DeviceManagerActor ! RequestTrackDevice(groupId.toString, deviceId.toString(), anotherActor)
-            complete(
-              HttpEntity(
-                ContentTypes.`text/plain(UTF-8)`,
-                "Device"
-              )
-            )
-          }
+        pathPrefix("group" / LongNumber) { groupId =>
+          concat(
+            path("device" / LongNumber ) { deviceId =>
+              get {
+                DeviceManagerActor ! RequestTrackDevice(groupId.toString, deviceId.toString(), anotherActor)
+                complete(
+                  HttpEntity(
+                    ContentTypes.`text/plain(UTF-8)`,
+                    "Device"
+                  )
+                )
+              }
+            },
+            path("all" ) {
+              get {
+                DeviceManagerActor ! RequestAllTemperatures(requestId = 42, groupId.toString, anotherActor)
+                complete(
+                  HttpEntity(
+                    ContentTypes.`text/plain(UTF-8)`,
+                    "Device"
+                  )
+                )
+              }
+            }
+          )
         })
 
     val bindingFuture = Http().newServerAt("localhost", 8080).bind(route)
@@ -69,5 +95,3 @@ object IotApp {
   }
 
 }
-
-

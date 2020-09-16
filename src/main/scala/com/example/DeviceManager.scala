@@ -5,36 +5,37 @@ object DeviceManager {
   def apply(): Behavior[Command] =
     Behaviors.setup(context => new DeviceManager(context))
 
-  sealed trait Command
+  // Trait defining successful and failure responses
+  sealed trait Response
+  case object OK extends Response
+  final case class KO(reason: String) extends Response
 
+  // Trait and its implementations representing all possible messages that can be sent to this Behavior
+  sealed trait Command
   final case class RequestTrackDevice(groupId: String, deviceId: String, replyTo: ActorRef[DeviceRegistered])
     extends DeviceManager.Command
       with DeviceGroup.Command
-
   final case class DeviceRegistered(device: ActorRef[Device.Command])
     extends DeviceManager.Command
-
   final case class RequestDeviceList(requestId: Long, groupId: String, replyTo: ActorRef[ReplyDeviceList])
     extends DeviceManager.Command
       with DeviceGroup.Command
-
   final case class ReplyDeviceList(requestId: Long, ids: Set[String])
-
+    extends DeviceManager.Command
   final case class RequestAllTemperatures(requestId: Long, groupId: String, replyTo: ActorRef[RespondAllTemperatures])
     extends DeviceGroupQuery.Command
       with DeviceGroup.Command
       with DeviceManager.Command
-
   final case class RespondAllTemperatures(requestId: Long, temperatures: Map[String, TemperatureReading])
+    extends DeviceManager.Command
+  private final case class DeviceGroupTerminated(groupId: String) extends DeviceManager.Command
 
+  // Trait defining successful and failure responses
   sealed trait TemperatureReading
   final case class Temperature(value: Double) extends TemperatureReading
   case object TemperatureNotAvailable extends TemperatureReading
   case object DeviceNotAvailable extends TemperatureReading
   case object DeviceTimedOut extends TemperatureReading
-
-  private final case class DeviceGroupTerminated(groupId: String) extends DeviceManager.Command
-
 }
 
 class DeviceManager(context: ActorContext[DeviceManager.Command])
@@ -73,6 +74,11 @@ class DeviceManager(context: ActorContext[DeviceManager.Command])
         context.log.info("Device group actor for {} has been terminated", groupId)
         groupIdToActor -= groupId
         this
+
+      case _ => {
+          context.log.info("Unknown message")
+          this
+        }
     }
 
   override def onSignal: PartialFunction[Signal, Behavior[Command]] = {
