@@ -17,6 +17,9 @@ object IotApp {
       val DeviceManagerActor = context.spawn(DeviceManager(), "DeviceManagerActor")
       context.watch(DeviceManagerActor)
 
+      val anotherActor = context.spawn(DeviceManager(), "anotherActor")
+      context.watch(anotherActor)
+
       // Create ActorStystem and top level supervisor
     implicit val system = ActorSystem[Nothing](IotSupervisor(), "iot-system")
     // needed for the future flatMap/onComplete in the end
@@ -40,9 +43,9 @@ object IotApp {
             )
           }
         },
-        path("device") {
-          get {
-            DeviceManagerActor ! RequestTrackDevice("group1", "device1", DeviceManagerActor)
+        get {
+          pathPrefix("group" / LongNumber/ "device" / LongNumber) { (groupId, deviceId) =>
+            DeviceManagerActor ! RequestTrackDevice(groupId.toString, deviceId.toString(), anotherActor)
             complete(
               HttpEntity(
                 ContentTypes.`text/plain(UTF-8)`,
