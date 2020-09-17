@@ -1,3 +1,5 @@
+package com.example
+
 import akka.actor.typed.{Behavior, PostStop, Signal, ActorRef}
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors, LoggerOps}
 

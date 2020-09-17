@@ -1,3 +1,5 @@
+package com.example
+
 import akka.actor.testkit.typed.scaladsl.ScalaTestWithActorTestKit
 import org.scalatest.wordspec.AnyWordSpecLike
 import scala.concurrent.duration._

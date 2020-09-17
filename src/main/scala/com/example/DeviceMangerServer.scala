@@ -1,11 +1,11 @@
-import DeviceManager.{RequestAllTemperatures, RequestTrackDevice}
+package com.example
+
 import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.{ActorSystem, Behavior, PostStop}
 import akka.http.scaladsl.Http.ServerBinding
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.{ContentTypes, HttpEntity, StatusCodes}
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.Route
+import com.example.swagger.SwaggerDocService
 
 import scala.concurrent.duration._
 import akka.util.Timeout
@@ -13,6 +13,7 @@ import akka.util.Timeout
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
 import akka.actor.typed.scaladsl.AskPattern.Askable
+import akka.http.scaladsl.server.Route
 
 object DeviceManagerServer {
   import akka.actor.typed.scaladsl.AskPattern.schedulerFromActorSystem
@@ -29,13 +30,10 @@ object DeviceManagerServer {
     val DeviceManagerActor = ctx.spawn(DeviceManager(), "DeviceManagerActor")
     ctx.watch(DeviceManagerActor)
 
-    val anotherActor = ctx.spawn(DeviceManager(), "anotherActor")
-    ctx.watch(anotherActor)
-
-    val routes = new DeviceManagerRoutes(DeviceManagerActor)
+    val routes: Route = concat( new DeviceManagerRoutes(DeviceManagerActor).theDeviceManagerRoutes, new DeviceRoutes(DeviceManagerActor).theDeviceRoutes, SwaggerDocService.routes)
 
     val serverBinding: Future[Http.ServerBinding] =
-      Http().newServerAt(host, port).bind(routes.theDeviceManagerRoutes)
+      Http().newServerAt(host, port).bind(routes)
     ctx.pipeToSelf(serverBinding) {
       case Success(binding) => Started(binding)
       case Failure(ex)      => StartFailed(ex)
