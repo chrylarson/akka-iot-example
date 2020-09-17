@@ -16,6 +16,12 @@ curl --request POST \
 	"value" : 24.23
 }'
 ~~~
+Read temperature data
+~~~
+curl --request GET \
+  --url http://localhost:8080/group/1/device/1/data \
+  --header 'content-type: application/json'
+~~~
 List all active actors
 ~~~
 curl --request GET \
