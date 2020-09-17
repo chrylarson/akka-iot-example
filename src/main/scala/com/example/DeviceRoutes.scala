@@ -35,7 +35,7 @@ class DeviceRoutes(deviceRepo: ActorRef[DeviceManager.Command])(implicit system:
     description = "Accepts JSON data from devices",
     responses = Array(
       new ApiResponse(responseCode = "200", description = "Accepted",
-        content = Array(new Content(schema = new Schema(implementation = classOf[DeviceManagerRoutes])))),
+        content = Array(new Content(schema = new Schema(implementation = classOf[DeviceRoutes])))),
       new ApiResponse(responseCode = "500", description = "Internal server error"))
   )
   def publishData: Route =
@@ -62,7 +62,19 @@ class DeviceRoutes(deviceRepo: ActorRef[DeviceManager.Command])(implicit system:
       }
     }
 
-
+  @GET
+  @Path("/group/{groupId}/device/{deviceId}/data")
+  @Produces(Array(MediaType.APPLICATION_JSON))
+  @Operation(summary = "Read data from sensor",
+    parameters = Array(
+      new Parameter(name = "deviceId", in = ParameterIn.PATH, description = "Device ID")
+    ),
+    description = "Returns the data from the sensor",
+    responses = Array(
+      new ApiResponse(responseCode = "200", description = "Accepted",
+        content = Array(new Content(schema = new Schema(implementation = classOf[DeviceRoutes])))),
+      new ApiResponse(responseCode = "500", description = "Internal server error"))
+  )
   def readData: Route =
     path("group" / LongNumber / "device" / LongNumber / "data" ) { ( groupId, deviceId ) =>
       pathEnd {
